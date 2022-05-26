@@ -1,0 +1,25 @@
+- name: Create the EC2 instance
+  hosts: localhost
+  gather_facts: false
+  vars:
+    name: myinstance
+    ami: ami-0022f774911c1d690
+      #Other vars ommited for brevity
+  tasks:
+    - name: Launch Instance
+      ec2:
+        key_name: mk
+        group: launch-wizard-1
+        instance_type: t2.micro
+        image: "{{ ami }}"
+        #user_data: "{{ lookup('file', 'user_data.sh') }}"
+        wait: true
+        region: us-east-1
+        vpc_subnet_id: subnet-0a34038d64a59b0c5
+        assign_public_ip: yes
+        exact_count: 1
+        count_tag:
+          Name: "{{ name }}"
+        instance_tags:
+          Name: from_ansible
+      register: ec2
