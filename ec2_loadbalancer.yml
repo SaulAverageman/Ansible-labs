@@ -1,0 +1,52 @@
+- name: Crete multiple ec2 with a loadbalancer
+  hosts: localhost
+  gather_facts: false
+  vars:
+    name: servers-from-ansible
+    ami: ami-09d56f8956ab235b3
+    key: mk
+    SG: launch-wizard-1
+    region: us-east-1
+    subnetA: subnet-047500d0b4c99b1c7
+    subnetB: subnet-0ff0fdb825988a131
+  tasks:
+    - name: 1f instance
+      ec2:
+        key_name: "{{key}}"
+        image: "{{ami}}"
+        group: "{{SG}}"
+        region: "{{region}}"
+        vpc_subnet_id: "{{subnetA}}"
+        instance_type: t2.micro
+        user_data: "{{lookup('file', 'update-script.sh')}}"
+        assign_public_ip: yes
+        exact_count: 1
+        count_tag:
+          Name: "{{name}}"
+        instance_tags:
+          Name: ServerA
+      register: ServerA
+    - name: Create load balancer
+      ec2_elb_lb:
+        name: "LB"
+        state: present
+        region: "{{region}}"
+        subnets:
+          - "{{subnetA}}"
+          - "{{subnetB}}"
+        security_group_names: "{{SG}}"
+        listeners:
+          - protocol: http
+            load_balancer_port: 80
+            instance_port: 80
+            proxy_protocol: True
+        health_check:
+          ping_protocol: http
+          ping_port: 80
+          ping_path: "/index.html"
+          response_timeout: 5
+          interval: 10
+          unhealthy_threshold: 2
+          healthy_threshold: 2
+        instance_ids: "{{ServerA.instance_ids}}"
+      register: elastic_lb
