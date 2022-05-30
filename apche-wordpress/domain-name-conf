@@ -1,0 +1,4 @@
+ServerName domain.com
+ServerAlias www.domain.com
+ServerAdmin webmaster@localhost
+DocumentRoot /var/www/html
