@@ -1,6 +1,6 @@
 **# Ansible Install**
-apt install ansible
-apt install python3-pip
+apt install ansible python3-pip
+#Python libs
 pip install boto boto3
 
 **#To execute a playbook**
