@@ -1,0 +1,42 @@
+---
+- hosts: webserver
+  become: yes
+  tasks:
+    - name: packages
+      apt:
+        name:
+        - apache2
+        - php
+        - libapache2-mod-php
+        - php-mysql
+        - php-curl
+        - php-gd
+        - php-mbstring
+        - php-xml
+        - unzip
+        - wget
+        state: present
+    - name: rewrite command
+      shell: |
+        a2enmod rewrite
+        cd /var/www/html
+        wget https://wordpress.org/latest.zip
+        unzip latest.zip
+        mv wordpress/* /var/www/html/
+        chown -R www-data:www-data /var/www/html
+        find /var/www/html -type d -exec chmod g+s {} \;
+        chmod g+w /var/www/html/wp-content
+        chmod -R g+w /var/www/html/wp-content/themes
+        chmod -R g+w /var/www/html/wp-content/plugins
+    - name: copy domain.com.conf
+      copy:
+        src: /home/ec2-user/task/domain.com.conf
+        dest: /etc/apache2/sites-available/
+    - name: configure apachw
+      shell: |
+        a2ensite domain.com.conf
+        a2dissite 000-default.conf
+    - name: restart apache
+      service:
+        name: apache2
+        state: restarted
